@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Home</title>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+	<!-- <link rel="stylesheet" href="style.css"> -->
+	<link rel="stylesheet" href="style.css">
+	<style>
+		.card {
+			list-style: none;
+			padding:20px;
+			background-color: #27445C;
+			color: #222;
+			font-family: "Avenir Black";
+			/* margin-bottom: 10px; */
+			/* width: 400px; */
+		}
+		#show-list {
+			padding-inline-start: 0;
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+			grid-gap: 10px;
+		}
+		.card-rank, .card-date {
+			margin-bottom: 5px;
+		}
+		.card-title {
+			margin-top: 5px;
+		}
+		.show-pic {
+		    height: auto;
+		    width: 300px;
+		}
+	</style>
+</head>
+<body>
+
+	<div class="container" id="header">
+		<h1>TV Show Tracker</h1>
+	</div> <!-- #header -->
+
+	<div class="container" id="nav-wrapper">
+		<div class="row">
+			<div class="col"> <a id="active-nav" href="index.html">Home</a> </div>
+			<div class="col"> <a href="watch_list.php">My Watch List</a> </div>
+			<div class="col"> <a href="add_show.php">Add Show</a> </div>
+		</div> <!-- .row -->
+	</div> <!-- #nav-wrapper -->
+
+	<div class="container" id="main">
+		<div class="row">
+			<div class="row">
+				<h1 class="col-sm-12 my-4">Find TV Shows</h1>
+			</div> <!-- .row -->
+			<form class="col-12" id="search-form">
+				<div class="form-group row">
+					<label for="search-query" class="col-2 col-form-label text-sm-right">Search:</label>
+					<div class="col-10">
+						<input type="text" class="form-control" id="search-query" placeholder="Search...">
+						<small id = "search-error" class="form-text text-danger"></small>
+					</div>
+				</div> <!-- .form-row -->
+				<div class="col-sm-12 col-md-6 mt-4">
+					<button type="submit" class="btn btn-primary mb-3">Search</button>
+				</div>
+			</form>
+		</div> <!-- .row -->
+		<div class="row">
+			<h1 class="col-sm-12 mt-5 my-2">Results</h1>
+		</div> <!-- .row -->
+
+		<ul id="show-list">
+			<!-- populate with js -->
+		</ul>
+	</div> <!-- #main -->
+
+	<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+	<script>
+
+		const url = "https://api.simkl.com/tv/premieres/?page=1&limit=20?client_id=a9936b4293200942bdf29d2911c1d1114b3963e4832cbc7883b7738a9027dcfc";
+		$.ajax({
+			url: url,
+			dataType: "json"
+		}).then((data) => {
+			for (show of data) {
+                createCard(show);
+            }
+		}).fail((error) => {
+			alert("AJAX error");
+		})
+
+		const placeholderImg = "https://upload.wikimedia.org/wikipedia/commons/1/14/No_Image_Available.jpg?20200913095930";
+		function createCard(show){
+			var li = document.createElement('li');
+			// var divImage = document.createElement('div');
+			var showImage = document.createElement('img');
+			var h2Title = document.createElement('h2');
+			var pDate = document.createElement('p');
+			var pRank = document.createElement('p');
+
+			h2Title.innerHTML = show.title;
+			pDate.innerHTML = "Release Year: " + show.year;
+
+			if(show.poster == null) {
+				showImage.src = placeholderImg;
+				showImage.alt = "Poster image unavailable.";
+			} else {
+				showImage.src = "https://simkl.in/posters/" + show.poster + "_w.jpg";
+				showImage.alt = show.title+" poster image.";
+			}
+			showImage.classList.add("show-pic");
+
+			if(show.rank == null) {
+				pRank.innerHTML = "Rank: N/A";
+			} else {
+				pRank.innerHTML = "Rank: " + show.rank;
+			}
+
+			li.appendChild(showImage);
+			li.appendChild(h2Title);
+			li.appendChild(pDate);
+			li.appendChild(pRank);
+
+			li.classList.add("card");
+			showImage.classList.add("card-img");
+			h2Title.classList.add("card-title");
+			pDate.classList.add("card-date");
+			pRank.classList.add("card-rank");
+
+			document.querySelector('#show-list').appendChild(li);
+		}
+		document.querySelector('#search-form').onsubmit = function(){
+			var query = document.querySelector('#search-query').value.trim();
+			if (query.length == 0) {
+				document.querySelector("#search-error").innerHTML = 'Please input a valid search term';
+				return false;
+			}
+			// const query_url = `https://api.simkl.com/search/tv?q=${query}&client_id=a9936b4293200942bdf29d2911c1d1114b3963e4832cbc7883b7738a9027dcfc`;
+			const query_url = `https://api.simkl.com/search/tv?q=${query}&page=1&limit=20&extended=full&client_id=a9936b4293200942bdf29d2911c1d1114b3963e4832cbc7883b7738a9027dcfc`;
+			// const query_url = "https://api.simkl.com/tv/airing?today?client_id=a9936b4293200942bdf29d2911c1d1114b3963e4832cbc7883b7738a9027dcfc";
+			$.ajax({
+				url: query_url,
+				dataType: "json"
+			}).then((data) => {
+				document.querySelector("#show-list").innerHTML = '';
+				for (show of data) {
+					createCard(show);
+					// console.log(show);
+				}
+			}).fail((error) => {
+				alert("AJAX error");
+			});
+			return false;
+		}
+	</script>
+</body>
+</html>
